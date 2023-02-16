@@ -1,5 +1,3 @@
-// Pipe version
-
 #include <bits/stdc++.h>
 #include <chrono>
 #include <cmath>
@@ -41,6 +39,24 @@ int main(int argc, char **argv)
 {
     // Check number of arguments
 
+    // Pipes for synchronization
+
+    int pipefds1[2];
+    int pipeDesc1;
+
+    pipeDesc1 = pipe(pipefds1); // pipe creation
+
+    if (pipeDesc1 == -1)
+        perror("pipe");
+
+    int pipefds2[2];
+    int pipeDesc2;
+
+    pipeDesc2 = pipe(pipefds2); // pipe creation
+
+    if (pipeDesc2 == -1)
+        perror("pipe");
+
     if (argc != 3)
     {
         cout << "Usage: ./a.out <path-to-original-image> <path-to-transformed-image>\n";
@@ -75,17 +91,19 @@ int main(int argc, char **argv)
     fclose(input);
 
     // Transform Images
-    RBGToGrayScale(imgData, imgHeight, imgWidth);
+    // RBGToGrayScale(imgData, imgHeight, imgWidth);
 
     // Write transformed image to output file
     FILE *output = fopen(argv[2], "w");
     fprintf(output, "%s\n%d %d\n%d\n", ppmVersion, imgWidth, imgHeight, imgColorMax);
 
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < imgHeight; i++)
     {
-        for (int j = 0; j < 2; j++)
+        for (int j = 0; j < imgWidth; j++)
         {
-            fprintf(output, "%d %d %d ", imgData[i][j][0], imgData[i][j][1], imgData[i][j][2]);
+            fprintf(output, "%d ", imgData[i][j][0]);
+            fprintf(output, "%d ", imgData[i][j][1]);
+            fprintf(output, "%d ", imgData[i][j][2]);
         }
         fprintf(output, "\n");
     }

@@ -1,15 +1,16 @@
-// Multi-thread, semaphore version
-
 #include <bits/stdc++.h>
 #include <chrono>
 #include <cmath>
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <semaphore.h>
+#include <thread>
 
 using namespace std;
 
 // Transformation Functions
+sem_t semaphore;
 
 void RBGToGrayScale(vector<vector<vector<int>>> &data, int height, int width)
 {
@@ -18,6 +19,7 @@ void RBGToGrayScale(vector<vector<vector<int>>> &data, int height, int width)
     {
         for (int j = 0; j < width; j++)
         {
+            sem_wait(&semaphore);
             r = data[i][j][0];
             g = data[i][j][1];
             b = data[i][j][2];
@@ -28,6 +30,8 @@ void RBGToGrayScale(vector<vector<vector<int>>> &data, int height, int width)
             data[i][j][0] = gray;
             data[i][j][1] = gray;
             data[i][j][2] = gray;
+
+            sem_post(&semaphore);
         }
     }
 }
@@ -75,17 +79,31 @@ int main(int argc, char **argv)
     fclose(input);
 
     // Transform Images
-    RBGToGrayScale(imgData, imgHeight, imgWidth);
+    // RBGToGrayScale(imgData, imgHeight, imgWidth);
+
+    // Using semaphores for synchronization
+    sem_init(&semaphore, 0, 1);
+
+    // Threads made for each image transformation
+    thread T1(RBG_2_Gray_Conversion, std::ref(arrayOfData), height, width);
+    thread T2(Edge_Detection, std::ref(arrayOfData), height, width);
+
+    // Waiting for T1 & T2 call by using join()
+
+    T1.join();
+    T2.join();
 
     // Write transformed image to output file
     FILE *output = fopen(argv[2], "w");
     fprintf(output, "%s\n%d %d\n%d\n", ppmVersion, imgWidth, imgHeight, imgColorMax);
 
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < imgHeight; i++)
     {
-        for (int j = 0; j < 2; j++)
+        for (int j = 0; j < imgWidth; j++)
         {
-            fprintf(output, "%d %d %d ", imgData[i][j][0], imgData[i][j][1], imgData[i][j][2]);
+            fprintf(output, "%d ", imgData[i][j][0]);
+            fprintf(output, "%d ", imgData[i][j][1]);
+            fprintf(output, "%d ", imgData[i][j][2]);
         }
         fprintf(output, "\n");
     }

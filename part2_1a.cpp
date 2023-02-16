@@ -1,13 +1,14 @@
-// Multi-thread, atomic operation version
-
 #include <bits/stdc++.h>
 #include <chrono>
 #include <cmath>
+#include <thread>
 #include <vector>
 #include <fstream>
 #include <sstream>
 
 using namespace std;
+
+atomic_flag atomicFlag2False = ATOMIC_FLAG_INIT;
 
 // Transformation Functions
 
@@ -31,11 +32,6 @@ void RBGToGrayScale(vector<vector<vector<int>>> &data, int height, int width)
         }
     }
 }
-
-struct pixel
-{
-    int r, g, b; // Red, Green, Blue Color Defined
-};
 
 int main(int argc, char **argv)
 {
@@ -75,17 +71,29 @@ int main(int argc, char **argv)
     fclose(input);
 
     // Transform Images
-    RBGToGrayScale(imgData, imgHeight, imgWidth);
+    // RBGToGrayScale(imgData, imgHeight, imgWidth);
+
+    // Threads made for each image transformation
+
+    thread T1(RBGToGrayScale, imgData, imgHeight, imgWidth);
+    thread T2(EdgeDetection, imgData, imgHeight, imgWidth);
+
+    // Waiting for T1 & T2 to complete execution
+
+    T1.join();
+    T2.join();
 
     // Write transformed image to output file
     FILE *output = fopen(argv[2], "w");
     fprintf(output, "%s\n%d %d\n%d\n", ppmVersion, imgWidth, imgHeight, imgColorMax);
 
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < imgHeight; i++)
     {
-        for (int j = 0; j < 2; j++)
+        for (int j = 0; j < imgWidth; j++)
         {
-            fprintf(output, "%d %d %d ", imgData[i][j][0], imgData[i][j][1], imgData[i][j][2]);
+            fprintf(output, "%d ", imgData[i][j][0]);
+            fprintf(output, "%d ", imgData[i][j][1]);
+            fprintf(output, "%d ", imgData[i][j][2]);
         }
         fprintf(output, "\n");
     }
