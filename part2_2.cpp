@@ -11,8 +11,9 @@
 using namespace std;
 
 // Transformation Functions
-
 // Transformation To increase brightness of image
+sem_t binarySemaphore;
+
 void IncreaseBrightness(vector<vector<vector<int>>> &imgData, int height, int width)
 {
     for (int i = 0; i < height; i++)
@@ -29,10 +30,11 @@ void IncreaseBrightness(vector<vector<vector<int>>> &imgData, int height, int wi
             g = min(int(g * 3), 255);
             b = min(int(b * 3), 255);
 
+            shmpush(r, g, b);
             // Update pixel values
-            imgData[i][j][0] = r;
-            imgData[i][j][1] = g;
-            imgData[i][j][2] = b;
+            // imgData[i][j][0] = r;
+            // imgData[i][j][1] = g;
+            // imgData[i][j][2] = b;
         }
     }
 }
