@@ -48,7 +48,7 @@ void IncreaseBrightness(int height, int width)
     {
         for (int j = 0; j < width; j++)
         {
-            while (!transform_1_completed[i][j])
+            while (!transform_1_completed[i*height + j])
                 ;
             int r = imgData[i][j][0];
             int g = imgData[i][j][1];
@@ -87,7 +87,7 @@ void RBGToGrayScale(int height, int width)
             imgData[i][j][1] = gray;
             imgData[i][j][2] = gray;
 
-            transform_1_completed[i][j] = true;
+            transform_1_completed[i * height + j] = true;
         }
     }
     mtx.unlock();
