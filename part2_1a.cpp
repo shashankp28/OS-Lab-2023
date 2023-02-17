@@ -30,6 +30,11 @@ struct atomwrapper
     atomwrapper &operator=(const atomwrapper &other)
     {
         _a.store(other._a.load());
+        return *this;
+    }
+    bool operator==(const bool &other)
+    {
+        return _a.load() == other;
     }
 };
 
@@ -48,7 +53,8 @@ void IncreaseBrightness(int height, int width)
     {
         for (int j = 0; j < width; j++)
         {
-            while (!transform_1_completed[i*height + j])
+
+            while (transform_1_completed[i*height + j] == false)
                 ;
             int r = imgData[i][j][0];
             int g = imgData[i][j][1];
@@ -71,7 +77,6 @@ void IncreaseBrightness(int height, int width)
 void RBGToGrayScale(int height, int width)
 {
     int r, g, b, gray;
-    mtx.lock();
     for (int i = 0; i < height; i++)
     {
         for (int j = 0; j < width; j++)
@@ -87,10 +92,9 @@ void RBGToGrayScale(int height, int width)
             imgData[i][j][1] = gray;
             imgData[i][j][2] = gray;
 
-            transform_1_completed[i * height + j] = true;
+            transform_1_completed[i * height + j] = atomic<bool>(true);
         }
     }
-    mtx.unlock();
 }
 
 int main(int argc, char **argv)
