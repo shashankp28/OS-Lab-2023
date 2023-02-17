@@ -1,5 +1,4 @@
 #include <cmath>
-#include <mutex>
 #include <chrono>
 #include <thread>
 #include <vector>
@@ -11,9 +10,8 @@ using namespace std;
 
 // Address Space Variables for threads
 
-mutex mtx;
 vector<vector<vector<int>>> imgData;
-vector<vector<bool>> transform_1_completed;
+vector<vector<atomic<bool>>> transform_1_completed;
 
 // Transformation Functions
 
@@ -61,9 +59,7 @@ void RBGToGrayScale(int height, int width)
             imgData[i][j][0] = gray;
             imgData[i][j][1] = gray;
             imgData[i][j][2] = gray;
-            mtx.lock();
             transform_1_completed[i][j] = true;
-            mtx.unlock();
         }
     }
 }
@@ -88,19 +84,23 @@ int main(int argc, char **argv)
     fscanf(input, "%s%d%d%d", ppmVersion, &imgWidth, &imgHeight, &imgColorMax);
 
     // Store pixel information in a matrix
+    transform_1_completed.reserve(imgHeight);
+    for (int i = 0; i < imgHeight; i++)
+    {
+        vector<atomic<bool>> row_bool(imgWidth, false);
+        transform_1_completed.push_back(row_bool);
+    }
+
+
     for (int i = 0; i < imgHeight; i++)
     {
         vector<vector<int>> row;
-        vector<bool> temp_comp;
         for (int j = 0; j < imgWidth; j++)
         {
             fscanf(input, "%d%d%d", &r, &g, &b);
             vector<int> tempVec = {r, g, b};
             row.push_back(tempVec);
-            temp_comp.push_back(false);
         }
-        transform_1_completed.push_back(temp_comp);
-
         imgData.push_back(row);
         row.clear();
     }
@@ -113,8 +113,8 @@ int main(int argc, char **argv)
 
     // Threads made for each image transformation
 
-    thread T1(IncreaseBrightness, imgData, imgHeight, imgWidth);
-    thread T2(RBGToGrayScale, imgData, imgHeight, imgWidth);
+    thread T1(IncreaseBrightness, imgHeight, imgWidth);
+    thread T2(RBGToGrayScale, imgHeight, imgWidth);
 
     // Waiting for T1 & T2 to complete execution
 
