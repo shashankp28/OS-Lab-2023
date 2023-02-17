@@ -13,19 +13,42 @@ void RBGToGrayScale(vector<vector<vector<int>>> &data, int height, int width)
 {
     int r, g, b, gray;
     for (int i = 0; i < height; i++)
-    { 
+    {
         for (int j = 0; j < width; j++)
-        { 
+        {
             r = data[i][j][0];
             g = data[i][j][1];
             b = data[i][j][2];
-            
+
             // Convert to grayscale by calculating the weighted sum of current r, g, b values
 
             int gray = r * (0.299) + g * (0.587) + b * (0.114);
             data[i][j][0] = gray;
             data[i][j][1] = gray;
             data[i][j][2] = gray;
+        }
+    }
+}
+
+void IncreaseBrightness(vector<vector<vector<int>>> &data, int height, int width)
+{
+    for (int i = 0; i < height; i++)
+    {
+        for (int j = 0; j < width; j++)
+        {
+            int r = data[i][j][0];
+            int g = data[i][j][1];
+            int b = data[i][j][2];
+
+            // Increase brightness of each channel by the specified amount
+            r = min(int(r * 3), 255);
+            g = min(int(g * 3), 255);
+            b = min(int(b * 3), 255);
+
+            // Update pixel values
+            data[i][j][0] = r;
+            data[i][j][1] = g;
+            data[i][j][2] = b;
         }
     }
 }
@@ -39,7 +62,7 @@ int main(int argc, char **argv)
 {
     // Check number of arguments
 
-    if (argc!=3)
+    if (argc != 3)
     {
         cout << "Usage: ./a.out <path-to-original-image> <path-to-transformed-image>\n";
         exit(0);
@@ -55,7 +78,7 @@ int main(int argc, char **argv)
     fscanf(input, "%s%d%d%d", ppmVersion, &imgWidth, &imgHeight, &imgColorMax);
 
     // Store pixel information in a matrix
-    for (int i = 0; i < imgHeight ; i++)
+    for (int i = 0; i < imgHeight; i++)
     {
         vector<vector<int>> row;
         for (int j = 0; j < imgWidth; j++)
@@ -73,6 +96,7 @@ int main(int argc, char **argv)
     fclose(input);
 
     // Transform Images
+    IncreaseBrightness(imgData, imgHeight, imgWidth);
     RBGToGrayScale(imgData, imgHeight, imgWidth);
 
     // Write transformed image to output file
