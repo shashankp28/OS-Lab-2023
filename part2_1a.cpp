@@ -1,18 +1,43 @@
 #include <cmath>
-#include <mutex>
 #include <chrono>
 #include <thread>
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <atomic>
 #include <bits/stdc++.h>
+
+template <typename T>
+struct atomwrapper
+{
+    std::atomic<T> _a;
+
+    atomwrapper()
+        : _a()
+    {
+    }
+
+    atomwrapper(const std::atomic<T> &a)
+        : _a(a.load())
+    {
+    }
+
+    atomwrapper(const atomwrapper &other)
+        : _a(other._a.load())
+    {
+    }
+
+    atomwrapper &operator=(const atomwrapper &other)
+    {
+        _a.store(other._a.load());
+    }
+};
 
 using namespace std;
 // Address Space Variables for threads
 
-mutex mtx;
 vector<vector<vector<int>>> imgData;
-vector<vector<bool>> transform_1_completed;
+vector<atomwrapper<bool>> transform_1_completed;
 
 // Transformation Functions
 
@@ -87,19 +112,17 @@ int main(int argc, char **argv)
     fscanf(input, "%s%d%d%d", ppmVersion, &imgWidth, &imgHeight, &imgColorMax);
 
     // Store pixel information in a matrix
+;
     for (int i = 0; i < imgHeight; i++)
     {
         vector<vector<int>> row;
-        vector<bool> temp_comp;
         for (int j = 0; j < imgWidth; j++)
         {
             fscanf(input, "%d%d%d", &r, &g, &b);
             vector<int> tempVec = {r, g, b};
             row.push_back(tempVec);
-            temp_comp.push_back(false);
+            transform_1_completed.push_back(atomic<bool>(false));
         }
-        transform_1_completed.push_back(temp_comp);
-
         imgData.push_back(row);
         row.clear();
     }
