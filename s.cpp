@@ -23,8 +23,7 @@ void IncreaseBrightness(int height, int width)
     {
         for (int j = 0; j < width; j++)
         {
-            while (!transform_1_completed[i][j])
-                ;
+            while(!transform_1_completed[i][j]);
             int r = imgData[i][j][0];
             int g = imgData[i][j][1];
             int b = imgData[i][j][2];

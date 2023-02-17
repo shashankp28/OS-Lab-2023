@@ -1,45 +1,69 @@
-#include <bits/stdc++.h>
-#include <chrono>
 #include <cmath>
+#include <mutex>
+#include <chrono>
+#include <thread>
 #include <vector>
 #include <fstream>
 #include <sstream>
 #include <semaphore.h>
-#include <thread>
+#include <bits/stdc++.h>
 
 using namespace std;
+// Address Space Variables for threads
+
+mutex mtx;
+vector<vector<vector<int>>> imgData;
+sem_t binarySemaphore;
 
 // Transformation Functions
-sem_t semaphore;
 
-void RBGToGrayScale(vector<vector<vector<int>>> &data, int height, int width)
+// Transformation To increase brightness of image
+void IncreaseBrightness(int height, int width)
+{
+    for (int i = 0; i < height; i++)
+    {
+        for (int j = 0; j < width; j++)
+        {
+            sem_wait(&binarySemaphore);
+            int r = imgData[i][j][0];
+            int g = imgData[i][j][1];
+            int b = imgData[i][j][2];
+
+            // Increase brightness of each channel by the specified amount
+            r = min(int(r * 3), 255);
+            g = min(int(g * 3), 255);
+            b = min(int(b * 3), 255);
+
+            // Update pixel values
+            imgData[i][j][0] = r;
+            imgData[i][j][1] = g;
+            imgData[i][j][2] = b;
+        }
+    }
+}
+
+// Transformation To convert image to grayscale
+void RBGToGrayScale(int height, int width)
 {
     int r, g, b, gray;
     for (int i = 0; i < height; i++)
     {
         for (int j = 0; j < width; j++)
         {
-            sem_wait(&semaphore);
-            r = data[i][j][0];
-            g = data[i][j][1];
-            b = data[i][j][2];
+            r = imgData[i][j][0];
+            g = imgData[i][j][1];
+            b = imgData[i][j][2];
 
             // Convert to grayscale by calculating the weighted sum of current r, g, b values
 
             int gray = r * (0.299) + g * (0.587) + b * (0.114);
-            data[i][j][0] = gray;
-            data[i][j][1] = gray;
-            data[i][j][2] = gray;
-
-            sem_post(&semaphore);
+            imgData[i][j][0] = gray;
+            imgData[i][j][1] = gray;
+            imgData[i][j][2] = gray;
+            sem_post(&binarySemaphore);
         }
     }
 }
-
-struct pixel
-{
-    int r, g, b; // Red, Green, Blue Color Defined
-};
 
 int main(int argc, char **argv)
 {
@@ -55,7 +79,6 @@ int main(int argc, char **argv)
 
     char ppmVersion[20];
     int imgWidth, imgHeight, imgColorMax, r, g, b;
-    vector<vector<vector<int>>> imgData;
 
     FILE *input = fopen(argv[1], "r");
     fscanf(input, "%s%d%d%d", ppmVersion, &imgWidth, &imgHeight, &imgColorMax);
@@ -78,17 +101,13 @@ int main(int argc, char **argv)
     // Close input file
     fclose(input);
 
-    // Transform Images
-    // RBGToGrayScale(imgData, imgHeight, imgWidth);
-
-    // Using semaphores for synchronization
-    sem_init(&semaphore, 0, 1);
-
     // Threads made for each image transformation
-    thread T1(RBG_2_Gray_Conversion, std::ref(arrayOfData), height, width);
-    thread T2(Edge_Detection, std::ref(arrayOfData), height, width);
+    sem_init(&binarySemaphore, 0, 0);
 
-    // Waiting for T1 & T2 call by using join()
+    thread T1(IncreaseBrightness, imgHeight, imgWidth);
+    thread T2(RBGToGrayScale, imgHeight, imgWidth);
+
+    // Waiting for T1 & T2 to complete execution
 
     T1.join();
     T2.join();

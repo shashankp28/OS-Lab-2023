@@ -1,2 +1,2 @@
-part1: part1.cpp
-	g++ $^ -o part1
+all: part1.cpp
+	g++ part2_1b.cpp -o part2_1b -lpthread

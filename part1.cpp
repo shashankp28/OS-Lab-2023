@@ -54,11 +54,6 @@ void RBGToGrayScale(vector<vector<vector<int>>> &data, int height, int width)
 }
 
 
-struct pixel
-{
-    int r, g, b; // Red, Green, Blue Color Defined
-};
-
 int main(int argc, char **argv)
 {
     // Check number of arguments
