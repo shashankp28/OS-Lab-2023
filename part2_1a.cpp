@@ -4,14 +4,41 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <atomic>
 #include <bits/stdc++.h>
+
+template <typename T>
+struct atomwrapper
+{
+    std::atomic<T> _a;
+
+    atomwrapper()
+        : _a()
+    {
+    }
+
+    atomwrapper(const std::atomic<T> &a)
+        : _a(a.load())
+    {
+    }
+
+    atomwrapper(const atomwrapper &other)
+        : _a(other._a.load())
+    {
+    }
+
+    atomwrapper &operator=(const atomwrapper &other)
+    {
+        _a.store(other._a.load());
+    }
+};
 
 using namespace std;
 
 // Address Space Variables for threads
 
 vector<vector<vector<int>>> imgData;
-vector<vector<atomic<bool>>> transform_1_completed;
+vector<atomwrapper<bool>> transform_1_completed;
 
 // Transformation Functions
 
@@ -22,8 +49,8 @@ void IncreaseBrightness(int height, int width)
     {
         for (int j = 0; j < width; j++)
         {
-            while(!transform_1_completed[i][j])
-                ;
+            // while(!transform_1_completed[i*height + j])
+                // ;
             int r = imgData[i][j][0];
             int g = imgData[i][j][1];
             int b = imgData[i][j][2];
@@ -59,7 +86,7 @@ void RBGToGrayScale(int height, int width)
             imgData[i][j][0] = gray;
             imgData[i][j][1] = gray;
             imgData[i][j][2] = gray;
-            transform_1_completed[i][j] = true;
+            // transform_1_completed[i*height + j] = true;
         }
     }
 }
@@ -84,14 +111,7 @@ int main(int argc, char **argv)
     fscanf(input, "%s%d%d%d", ppmVersion, &imgWidth, &imgHeight, &imgColorMax);
 
     // Store pixel information in a matrix
-    transform_1_completed.reserve(imgHeight);
-    for (int i = 0; i < imgHeight; i++)
-    {
-        vector<atomic<bool>> row_bool(imgWidth, false);
-        transform_1_completed.push_back(row_bool);
-    }
-
-
+;
     for (int i = 0; i < imgHeight; i++)
     {
         vector<vector<int>> row;
@@ -100,6 +120,7 @@ int main(int argc, char **argv)
             fscanf(input, "%d%d%d", &r, &g, &b);
             vector<int> tempVec = {r, g, b};
             row.push_back(tempVec);
+            transform_1_completed.push_back(atomic<bool>(false));
         }
         imgData.push_back(row);
         row.clear();
