@@ -23,6 +23,7 @@ void IncreaseBrightness(int height, int width)
     {
         for (int j = 0; j < width; j++)
         {
+            cout << "Thread 1: " << i << " " << j << endl;
             int r = imgData[i][j][0];
             int g = imgData[i][j][1];
             int b = imgData[i][j][2];
@@ -50,6 +51,7 @@ void RBGToGrayScale(int height, int width)
         for (int j = 0; j < width; j++)
         {
             sem_wait(&binarySemaphore);
+            cout << "Thread 2: " << i << " " << j << endl;
             r = imgData[i][j][0];
             g = imgData[i][j][1];
             b = imgData[i][j][2];
