@@ -73,7 +73,7 @@ int main(int argc, char **argv)
     fclose(input);
 
     // Transform Images
-    //RBGToGrayScale(imgData, imgHeight, imgWidth);
+    RBGToGrayScale(imgData, imgHeight, imgWidth);
 
     // Write transformed image to output file
     FILE *output = fopen(argv[2], "w");
