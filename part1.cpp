@@ -9,27 +9,6 @@ using namespace std;
 
 // Transformation Functions
 
-void RBGToGrayScale(vector<vector<vector<int>>> &data, int height, int width)
-{
-    int r, g, b, gray;
-    for (int i = 0; i < height; i++)
-    {
-        for (int j = 0; j < width; j++)
-        {
-            r = data[i][j][0];
-            g = data[i][j][1];
-            b = data[i][j][2];
-
-            // Convert to grayscale by calculating the weighted sum of current r, g, b values
-
-            int gray = r * (0.299) + g * (0.587) + b * (0.114);
-            data[i][j][0] = gray;
-            data[i][j][1] = gray;
-            data[i][j][2] = gray;
-        }
-    }
-}
-
 void IncreaseBrightness(vector<vector<vector<int>>> &data, int height, int width)
 {
     for (int i = 0; i < height; i++)
@@ -52,6 +31,28 @@ void IncreaseBrightness(vector<vector<vector<int>>> &data, int height, int width
         }
     }
 }
+
+void RBGToGrayScale(vector<vector<vector<int>>> &data, int height, int width)
+{
+    int r, g, b, gray;
+    for (int i = 0; i < height; i++)
+    {
+        for (int j = 0; j < width; j++)
+        {
+            r = data[i][j][0];
+            g = data[i][j][1];
+            b = data[i][j][2];
+
+            // Convert to grayscale by calculating the weighted sum of current r, g, b values
+
+            int gray = r * (0.299) + g * (0.587) + b * (0.114);
+            data[i][j][0] = gray;
+            data[i][j][1] = gray;
+            data[i][j][2] = gray;
+        }
+    }
+}
+
 
 struct pixel
 {

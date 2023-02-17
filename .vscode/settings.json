@@ -1,6 +1,10 @@
 {
   "files.associations": {
+    "*.embeddedhtml": "html",
     "thread": "cpp",
-    "fstream": "cpp"
+    "fstream": "cpp",
+    "atomic": "cpp",
+    "vector": "cpp",
+    "xutility": "cpp"
   }
 }
