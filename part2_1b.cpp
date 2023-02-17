@@ -11,7 +11,6 @@
 using namespace std;
 // Address Space Variables for threads
 
-mutex mtx;
 vector<vector<vector<int>>> imgData;
 sem_t binarySemaphore;
 
@@ -24,7 +23,6 @@ void IncreaseBrightness(int height, int width)
     {
         for (int j = 0; j < width; j++)
         {
-            sem_wait(&binarySemaphore);
             int r = imgData[i][j][0];
             int g = imgData[i][j][1];
             int b = imgData[i][j][2];
@@ -38,6 +36,7 @@ void IncreaseBrightness(int height, int width)
             imgData[i][j][0] = r;
             imgData[i][j][1] = g;
             imgData[i][j][2] = b;
+            sem_post(&binarySemaphore);
         }
     }
 }
@@ -50,6 +49,7 @@ void RBGToGrayScale(int height, int width)
     {
         for (int j = 0; j < width; j++)
         {
+            sem_wait(&binarySemaphore);
             r = imgData[i][j][0];
             g = imgData[i][j][1];
             b = imgData[i][j][2];
@@ -60,7 +60,6 @@ void RBGToGrayScale(int height, int width)
             imgData[i][j][0] = gray;
             imgData[i][j][1] = gray;
             imgData[i][j][2] = gray;
-            sem_post(&binarySemaphore);
         }
     }
 }
