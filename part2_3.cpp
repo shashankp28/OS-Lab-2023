@@ -1,61 +1,92 @@
-#include <bits/stdc++.h>
-#include <chrono>
 #include <cmath>
+#include <chrono>
+#include <thread>
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <semaphore.h>
+#include <fcntl.h>
+#include <bits/stdc++.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <iostream>
+#include <fstream>
 
 using namespace std;
+using namespace std::chrono;
 
-// Transformation Functions
+// Transformation To increase brightness of image
 
-void RBGToGrayScale(vector<vector<vector<int>>> &data, int height, int width)
+void IncreaseBrightness(vector<vector<vector<int>>> &imgData, int height, int width, int write_fd)
 {
-    int r, g, b, gray;
     for (int i = 0; i < height; i++)
     {
         for (int j = 0; j < width; j++)
         {
-            r = data[i][j][0];
-            g = data[i][j][1];
-            b = data[i][j][2];
+            int r = imgData[i][j][0];
+            int g = imgData[i][j][1];
+            int b = imgData[i][j][2];
 
-            // Convert to grayscale by calculating the weighted sum of current r, g, b values
+            // Increase brightness of each channel by the specified amount
+            r = min(int(r * 3), 255);
+            g = min(int(g * 3), 255);
+            b = min(int(b * 3), 255);
 
-            int gray = r * (0.299) + g * (0.587) + b * (0.114);
-            data[i][j][0] = gray;
-            data[i][j][1] = gray;
-            data[i][j][2] = gray;
+            imgData[i][j][0] = r;
+            imgData[i][j][1] = g;
+            imgData[i][j][2] = b;
+        }
+    }
+
+    // Write data to pipe
+    for (int i = 0; i < height; i++)
+    {
+        for (int j = 0; j < width; j++)
+        {
+            write(write_fd, imgData[i][j].data(), imgData[i][j].size() * sizeof(int));
         }
     }
 }
 
-struct pixel
+// Transformation To convert image to grayscale
+void RBGToGrayScale(vector<vector<vector<int>>> &inputData, int height, int width, ofstream &out_file, int read_fd)
 {
-    int r, g, b; // Red, Green, Blue Color Defined
-};
+    out_file << "P3\n"
+             << width << " " << height << "\n"
+             << "255\n";
+    int r, g, b, gray;
+
+    // Read data from pipe
+    for (int i = 0; i < inputData.size(); i++)
+    {
+        for (int j = 0; j < inputData[i].size(); j++)
+        {
+            vector<int> buffer(inputData[i][j].size());
+            read(read_fd, buffer.data(), buffer.size() * sizeof(int));
+
+            r = buffer[0];
+            g = buffer[1];
+            b = buffer[2];
+
+            int gray = r * (0.299) + g * (0.587) + b * (0.114);
+
+            inputData[i][j][0] = gray;
+            inputData[i][j][1] = gray;
+            inputData[i][j][2] = gray;
+
+            out_file << gray << " " << gray << " " << gray << " ";
+        }
+        out_file << "\n";
+    }
+}
 
 int main(int argc, char **argv)
 {
     // Check number of arguments
 
-    // Pipes for synchronization
-
-    int pipefds1[2];
-    int pipeDesc1;
-
-    pipeDesc1 = pipe(pipefds1); // pipe creation
-
-    if (pipeDesc1 == -1)
-        perror("pipe");
-
-    int pipefds2[2];
-    int pipeDesc2;
-
-    pipeDesc2 = pipe(pipefds2); // pipe creation
-
-    if (pipeDesc2 == -1)
-        perror("pipe");
 
     if (argc != 3)
     {
@@ -65,13 +96,14 @@ int main(int argc, char **argv)
 
     // Read PPM file
 
+    auto start = high_resolution_clock::now();
     char ppmVersion[20];
     int imgWidth, imgHeight, imgColorMax, r, g, b;
-    vector<vector<vector<int>>> imgData;
 
     FILE *input = fopen(argv[1], "r");
     fscanf(input, "%s%d%d%d", ppmVersion, &imgWidth, &imgHeight, &imgColorMax);
 
+    vector<vector<vector<int>>> imgData;
     // Store pixel information in a matrix
     for (int i = 0; i < imgHeight; i++)
     {
@@ -90,26 +122,57 @@ int main(int argc, char **argv)
     // Close input file
     fclose(input);
 
-    // Transform Images
-    // RBGToGrayScale(imgData, imgHeight, imgWidth);
+    // Pipes for communication
 
-    // Write transformed image to output file
-    FILE *output = fopen(argv[2], "w");
-    fprintf(output, "%s\n%d %d\n%d\n", ppmVersion, imgWidth, imgHeight, imgColorMax);
+    int fd[2];
 
-    for (int i = 0; i < imgHeight; i++)
+    if (pipe(fd) == -1)
     {
-        for (int j = 0; j < imgWidth; j++)
-        {
-            fprintf(output, "%d ", imgData[i][j][0]);
-            fprintf(output, "%d ", imgData[i][j][1]);
-            fprintf(output, "%d ", imgData[i][j][2]);
-        }
-        fprintf(output, "\n");
+        cerr << "Failed to create pipe." << endl;
+        return 1;
     }
 
-    // Close output file
-    fclose(output);
+    // Fork made to create 2 processes
+
+    pid_t pid = fork();
+
+    if (pid == -1)
+    {
+        cerr << "Failed to fork process." << endl;
+        return 1;
+    }
+
+    if (pid == 0)
+    {
+        ofstream outfile;
+        outfile.open(argv[2], ios::trunc); // open file in append mode
+
+
+        // Child process
+        close(fd[1]);
+        vector<vector<vector<int>>> input_data(imgHeight, vector<vector<int>>(imgWidth, vector<int>(3)));
+
+        // Transform image to grayscale
+        RBGToGrayScale(input_data, imgHeight, imgWidth, outfile, fd[0]);
+
+        outfile.close(); // close file descriptor
+        close(fd[0]);
+    }
+    else
+    {
+        // Parent process
+        // Increase brightness of image
+        close(fd[0]);
+        IncreaseBrightness(imgData, imgHeight, imgWidth, fd[1]);
+        close(fd[1]);
+        wait(NULL);
+    }
+
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+
+    if (pid > 0)
+        cout << "Time of Execution: " << duration.count() << " us" << endl;
 
     return 0;
 }

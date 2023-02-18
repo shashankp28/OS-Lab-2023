@@ -22,7 +22,8 @@ part2_2:
 
 part2_3: 
 	@echo "----------------Part 2: 3------------------"
-	@echo "In Progress"
+	@g++ $@.cpp -o $@ -lpthread
+	@./$@ sample1.ppm output_$@.ppm
 
 clean:
 	@rm -f part1 part2_1a part2_1b part2_2 part2_3 output_*
