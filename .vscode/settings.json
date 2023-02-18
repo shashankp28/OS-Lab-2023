@@ -8,7 +8,10 @@
     "ostream": "cpp",
     "chrono": "cpp",
     "iostream": "cpp",
-    "iosfwd": "cpp"
+    "iosfwd": "cpp",
+    "atomic": "cpp",
+    "mutex": "cpp",
+    "shared_mutex": "cpp"
   },
   "C_Cpp_Runner.cCompilerPath": "gcc",
   "C_Cpp_Runner.cppCompilerPath": "g++",

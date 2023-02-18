@@ -7,6 +7,7 @@
 #include <sstream>
 #include <pthread.h>
 #include <bits/stdc++.h>
+#include <mutex>
 
 // Wrapper for atomic operations
 template <typename T>
@@ -38,14 +39,23 @@ struct atomwrapper
     {
         return _a.load() == other;
     }
+    bool operator<(const atomwrapper &other)
+    {
+        return _a.load() < other._a.load();
+    }
 };
 
 using namespace std;
 using namespace std::chrono;
 
+// Mutex Lock for sanity check
+mutex mtx;
+
 // Address Space Variables for Inter-Thread communication
 vector<vector<vector<int>>> imgData;
 vector<atomwrapper<bool>> transform_1_completed;
+vector<int> trans1({0, 0}), trans2({0, 0});
+int counts = 0;
 
 // Transformation Functions
 // Transformation To increase brightness of image
@@ -56,8 +66,6 @@ void IncreaseBrightness(int height, int width)
         for (int j = 0; j < width; j++)
         {
             // Wait for first transformation to finish on pixel i, j
-            while (transform_1_completed[i*width + j] == false)
-                ;
             int r = imgData[i][j][0];
             int g = imgData[i][j][1];
             int b = imgData[i][j][2];
@@ -71,6 +79,14 @@ void IncreaseBrightness(int height, int width)
             imgData[i][j][0] = r;
             imgData[i][j][1] = g;
             imgData[i][j][2] = b;
+
+            mtx.lock();
+            trans1[0] = i;
+            trans1[1] = j;
+            mtx.unlock();
+
+            // Atomic operation to set operation completed
+            transform_1_completed[i * width + j] = atomic<bool>(true);
         }
     }
 }
@@ -83,6 +99,8 @@ void RBGToGrayScale(int height, int width)
     {
         for (int j = 0; j < width; j++)
         {
+            while (transform_1_completed[i * width + j] == false)
+                ;
             r = imgData[i][j][0];
             g = imgData[i][j][1];
             b = imgData[i][j][2];
@@ -94,8 +112,15 @@ void RBGToGrayScale(int height, int width)
             imgData[i][j][1] = gray;
             imgData[i][j][2] = gray;
 
-            // Atomic operation to set operation completed
-            transform_1_completed[i * width + j] = atomic<bool>(true);
+
+            mtx.lock();
+            trans2[0] = i;
+            trans2[1] = j;
+            if (trans1[0] < trans2[0] || (trans1[0] == trans2[0] && trans1[1] < trans2[1])){
+                cout << "T2 overtook T1 " << trans2[0]<<" "<<trans2[1] << "\n";
+            }
+
+            mtx.unlock();
         }
     }
 }
