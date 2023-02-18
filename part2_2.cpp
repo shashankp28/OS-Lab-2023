@@ -12,7 +12,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <iostream>
-#include <fstream>
 
 using namespace std;
 using namespace std::chrono;
@@ -71,8 +70,8 @@ void RBGToGrayScale(int height, int width, ofstream &out_file)
     }
 
     out_file << "P3\n"
-           << width << " " << height << "\n"
-           << "255\n";
+             << width << " " << height << "\n"
+             << "255\n";
     int r, g, b, gray;
     if ((data = (int *)shmat(shmid, NULL, 0)) == (int *)-1)
     {
@@ -91,7 +90,7 @@ void RBGToGrayScale(int height, int width, ofstream &out_file)
             // Convert to grayscale by calculating the weighted sum of current r, g, b values
 
             int gray = r * (0.299) + g * (0.587) + b * (0.114);
-            
+
             out_file << gray << " " << gray << " " << gray << " ";
         }
         out_file << "\n";
@@ -144,7 +143,6 @@ int main(int argc, char **argv)
     fclose(input);
 
     // Fork made to create 2 processes
-    // sem_init(&binarySemaphore, 0, 0);
     if ((shmid = shmget(key, imgWidth * imgHeight * 3 * sizeof(int), IPC_CREAT | 0666)) < 0)
     {
         cout << "shmget error" << endl;
@@ -152,13 +150,16 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    // Fork the process
     int pid = fork();
 
-    if(pid == -1){
+    if (pid == -1)
+    {
         cout << "Error During Fork";
         return 1;
     }
 
+    // Child Process second transformation
     if (pid == 0)
     {
         ofstream outfile;
@@ -169,6 +170,8 @@ int main(int argc, char **argv)
         RBGToGrayScale(imgHeight, imgWidth, outfile);
         outfile.close(); // close file descriptor
     }
+
+    // Parent process first transformation
     else
     {
         // Parent process
@@ -187,7 +190,8 @@ int main(int argc, char **argv)
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
 
-    if(pid>0) cout << "Time of Execution: " << duration.count() << " us" << endl;
+    if (pid > 0)
+        cout << "Time of Execution: " << duration.count() << " us" << endl;
 
     return 0;
 }
