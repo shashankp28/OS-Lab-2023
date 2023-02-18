@@ -11,10 +11,12 @@
 
 using namespace std;
 using namespace std::chrono;
-// Address Space Variables for threads
 
-vector<vector<vector<int>>> imgData;
+// Semaphore for synchronization
 sem_t binarySemaphore;
+
+// Address Space Variable for threads
+vector<vector<vector<int>>> imgData;
 
 // Transformation Functions
 
@@ -38,6 +40,8 @@ void IncreaseBrightness(int height, int width)
             imgData[i][j][0] = r;
             imgData[i][j][1] = g;
             imgData[i][j][2] = b;
+
+            // Increment sem post variable in first transformation
             sem_post(&binarySemaphore);
         }
     }
@@ -51,13 +55,13 @@ void RBGToGrayScale(int height, int width)
     {
         for (int j = 0; j < width; j++)
         {
+            // Wait for first process to call sem_post
             sem_wait(&binarySemaphore);
             r = imgData[i][j][0];
             g = imgData[i][j][1];
             b = imgData[i][j][2];
 
             // Convert to grayscale by calculating the weighted sum of current r, g, b values
-
             int gray = r * (0.299) + g * (0.587) + b * (0.114);
             imgData[i][j][0] = gray;
             imgData[i][j][1] = gray;
@@ -71,7 +75,6 @@ int main(int argc, char **argv)
     auto start = high_resolution_clock::now();
 
     // Check number of arguments
-
     if (argc != 3)
     {
         cout << "Usage: ./a.out <path-to-original-image> <path-to-transformed-image>\n";
@@ -79,10 +82,8 @@ int main(int argc, char **argv)
     }
 
     // Read PPM file
-
     char ppmVersion[20];
     int imgWidth, imgHeight, imgColorMax, r, g, b;
-
     FILE *input = fopen(argv[1], "r");
     fscanf(input, "%s%d%d%d", ppmVersion, &imgWidth, &imgHeight, &imgColorMax);
 
@@ -104,14 +105,14 @@ int main(int argc, char **argv)
     // Close input file
     fclose(input);
 
-    // Threads made for each image transformation
+    // Initialize semaphore to 0
     sem_init(&binarySemaphore, 0, 0);
 
+    // Threads made for each image transformation
     thread T1(IncreaseBrightness, imgHeight, imgWidth);
     thread T2(RBGToGrayScale, imgHeight, imgWidth);
 
     // Waiting for T1 & T2 to complete execution
-
     T1.join();
     T2.join();
 

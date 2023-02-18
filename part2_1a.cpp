@@ -8,7 +8,7 @@
 #include <pthread.h>
 #include <bits/stdc++.h>
 
-
+// Wrapper for atomic operations
 template <typename T>
 struct atomwrapper
 {
@@ -42,13 +42,12 @@ struct atomwrapper
 
 using namespace std;
 using namespace std::chrono;
-// Address Space Variables for threads
 
+// Address Space Variables for Inter-Thread communication
 vector<vector<vector<int>>> imgData;
 vector<atomwrapper<bool>> transform_1_completed;
 
 // Transformation Functions
-
 // Transformation To increase brightness of image
 void IncreaseBrightness(int height, int width)
 {
@@ -56,7 +55,7 @@ void IncreaseBrightness(int height, int width)
     {
         for (int j = 0; j < width; j++)
         {
-
+            // Wait for first transformation to finish on pixel i, j
             while (transform_1_completed[i*width + j] == false)
                 ;
             int r = imgData[i][j][0];
@@ -95,6 +94,7 @@ void RBGToGrayScale(int height, int width)
             imgData[i][j][1] = gray;
             imgData[i][j][2] = gray;
 
+            // Atomic operation to set operation completed
             transform_1_completed[i * width + j] = atomic<bool>(true);
         }
     }
@@ -105,7 +105,6 @@ int main(int argc, char **argv)
     auto start = high_resolution_clock::now();
 
     // Check number of arguments
-
     if (argc != 3)
     {
         cout << "Usage: ./a.out <path-to-original-image> <path-to-transformed-image>\n";
@@ -113,15 +112,12 @@ int main(int argc, char **argv)
     }
 
     // Read PPM file
-
     char ppmVersion[20];
     int imgWidth, imgHeight, imgColorMax, r, g, b;
-
     FILE *input = fopen(argv[1], "r");
     fscanf(input, "%s%d%d%d", ppmVersion, &imgWidth, &imgHeight, &imgColorMax);
 
     // Store pixel information in a matrix
-;
     for (int i = 0; i < imgHeight; i++)
     {
         vector<vector<int>> row;
@@ -140,15 +136,11 @@ int main(int argc, char **argv)
     fclose(input);
 
     // Transform Images
-    // RBGToGrayScale(imgData, imgHeight, imgWidth);
-
     // Threads made for each image transformation
-
     thread T1(IncreaseBrightness, imgHeight, imgWidth);
     thread T2(RBGToGrayScale, imgHeight, imgWidth);
 
     // Waiting for T1 & T2 to complete execution
-
     T1.join();
     T2.join();
 

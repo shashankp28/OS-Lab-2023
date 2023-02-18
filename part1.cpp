@@ -10,6 +10,7 @@ using namespace std::chrono;
 
 // Transformation Functions
 
+// Brightness Increase Transformation
 void IncreaseBrightness(vector<vector<vector<int>>> &data, int height, int width)
 {
     for (int i = 0; i < height; i++)
@@ -33,6 +34,7 @@ void IncreaseBrightness(vector<vector<vector<int>>> &data, int height, int width
     }
 }
 
+// RGB to Grayscale Transformation
 void RBGToGrayScale(vector<vector<vector<int>>> &data, int height, int width)
 {
     int r, g, b, gray;
@@ -67,11 +69,9 @@ int main(int argc, char **argv)
     }
 
     // Read PPM file
-
     char ppmVersion[20];
     int imgWidth, imgHeight, imgColorMax, r, g, b;
     vector<vector<vector<int>>> imgData;
-
     FILE *input = fopen(argv[1], "r");
     fscanf(input, "%s%d%d%d", ppmVersion, &imgWidth, &imgHeight, &imgColorMax);
 
