@@ -52,19 +52,20 @@ void IncreaseBrightness(vector<vector<vector<int>>> &imgData, int height, int wi
 }
 
 // Transformation To convert image to grayscale
-void RBGToGrayScale(vector<vector<vector<int>>> &inputData, int height, int width, ofstream &out_file, int read_fd)
+void RBGToGrayScale(int height, int width, ofstream &out_file, int read_fd)
 {
     out_file << "P3\n"
              << width << " " << height << "\n"
              << "255\n";
     int r, g, b, gray;
 
-    // Read data from pipe
-    for (int i = 0; i < inputData.size(); i++)
+
+    for (int i = 0; i < height; i++)
     {
-        for (int j = 0; j < inputData[i].size(); j++)
+        for (int j = 0; j < width; j++)
         {
-            vector<int> buffer(inputData[i][j].size());
+            // Read data from pipe
+            vector<int> buffer(3);
             read(read_fd, buffer.data(), buffer.size() * sizeof(int));
 
             r = buffer[0];
@@ -72,10 +73,6 @@ void RBGToGrayScale(vector<vector<vector<int>>> &inputData, int height, int widt
             b = buffer[2];
 
             int gray = r * (0.299) + g * (0.587) + b * (0.114);
-
-            inputData[i][j][0] = gray;
-            inputData[i][j][1] = gray;
-            inputData[i][j][2] = gray;
 
             out_file << gray << " " << gray << " " << gray << " ";
         }
@@ -95,14 +92,11 @@ int main(int argc, char **argv)
     }
 
     // Read PPM file
-
     auto start = high_resolution_clock::now();
     char ppmVersion[20];
     int imgWidth, imgHeight, imgColorMax, r, g, b;
-
     FILE *input = fopen(argv[1], "r");
     fscanf(input, "%s%d%d%d", ppmVersion, &imgWidth, &imgHeight, &imgColorMax);
-
     vector<vector<vector<int>>> imgData;
     // Store pixel information in a matrix
     for (int i = 0; i < imgHeight; i++)
@@ -153,7 +147,7 @@ int main(int argc, char **argv)
         vector<vector<vector<int>>> input_data(imgHeight, vector<vector<int>>(imgWidth, vector<int>(3)));
 
         // Transform image to grayscale
-        RBGToGrayScale(input_data, imgHeight, imgWidth, outfile, fd[0]);
+        RBGToGrayScale(imgHeight, imgWidth, outfile, fd[0]);
 
         outfile.close(); // close file descriptor
         close(fd[0]);
