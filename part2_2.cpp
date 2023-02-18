@@ -1,6 +1,5 @@
 #include <cmath>
 #include <chrono>
-#include <thread>
 #include <vector>
 #include <fstream>
 #include <sstream>
@@ -16,6 +15,7 @@
 #include <fstream>
 
 using namespace std;
+using namespace std::chrono;
 
 // Transformation Functions
 // Transformation To increase brightness of image
@@ -84,7 +84,6 @@ void RBGToGrayScale(int height, int width, ofstream &out_file)
         for (int j = 0; j < width; j++)
         {
             sem_wait(sem_id);
-
             r = data[i * width * 3 + j * 3 + 0];
             g = data[i * width * 3 + j * 3 + 1];
             b = data[i * width * 3 + j * 3 + 2];
@@ -107,6 +106,8 @@ void RBGToGrayScale(int height, int width, ofstream &out_file)
 
 int main(int argc, char **argv)
 {
+    auto start = high_resolution_clock::now();
+
     // Check number of arguments
 
     if (argc != 3)
@@ -153,13 +154,16 @@ int main(int argc, char **argv)
 
     int pid = fork();
 
+    if(pid == -1){
+        cout << "Error During Fork";
+        return 1;
+    }
+
     if (pid == 0)
     {
         ofstream outfile;
-        cout<<argv[2]<<endl;
         // string out = argv[2];
         outfile.open(argv[2], ios::trunc); // open file in append mode
-        cout << outfile.is_open() << endl;
         // Child process
         // Transform image to grayscale
         RBGToGrayScale(imgHeight, imgWidth, outfile);
@@ -179,9 +183,11 @@ int main(int argc, char **argv)
         perror("shmctl");
         exit(1);
     }
-    // Waiting for T1 & T2 to complete execution
 
-    // Write transformed image to output file
-    // out_file.close();
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+
+    if(pid>0) cout << "Time of Execution: " << duration.count() << " us" << endl;
+
     return 0;
 }

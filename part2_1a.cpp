@@ -2,10 +2,12 @@
 #include <chrono>
 #include <thread>
 #include <vector>
+#include <atomic>
 #include <fstream>
 #include <sstream>
-#include <atomic>
+#include <pthread.h>
 #include <bits/stdc++.h>
+
 
 template <typename T>
 struct atomwrapper
@@ -39,6 +41,7 @@ struct atomwrapper
 };
 
 using namespace std;
+using namespace std::chrono;
 // Address Space Variables for threads
 
 vector<vector<vector<int>>> imgData;
@@ -56,7 +59,6 @@ void IncreaseBrightness(int height, int width)
 
             while (transform_1_completed[i*width + j] == false)
                 ;
-            cout<<"Thread 1: "<<i<<" "<<j<<endl;
             int r = imgData[i][j][0];
             int g = imgData[i][j][1];
             int b = imgData[i][j][2];
@@ -82,7 +84,6 @@ void RBGToGrayScale(int height, int width)
     {
         for (int j = 0; j < width; j++)
         {
-            cout << "Thread 2: " << i << " " << j << endl;
             r = imgData[i][j][0];
             g = imgData[i][j][1];
             b = imgData[i][j][2];
@@ -101,6 +102,8 @@ void RBGToGrayScale(int height, int width)
 
 int main(int argc, char **argv)
 {
+    auto start = high_resolution_clock::now();
+
     // Check number of arguments
 
     if (argc != 3)
@@ -166,6 +169,11 @@ int main(int argc, char **argv)
 
     // Close output file
     fclose(output);
+
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+
+    cout << "Time of Execution: " << duration.count() << " us" << endl;
 
     return 0;
 }

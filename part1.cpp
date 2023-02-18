@@ -6,6 +6,7 @@
 #include <sstream>
 
 using namespace std;
+using namespace std::chrono;
 
 // Transformation Functions
 
@@ -56,8 +57,9 @@ void RBGToGrayScale(vector<vector<vector<int>>> &data, int height, int width)
 
 int main(int argc, char **argv)
 {
-    // Check number of arguments
+    auto start = high_resolution_clock::now();
 
+    // Check number of arguments
     if (argc != 3)
     {
         cout << "Usage: ./a.out <path-to-original-image> <path-to-transformed-image>\n";
@@ -113,5 +115,9 @@ int main(int argc, char **argv)
     // Close output file
     fclose(output);
 
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(stop - start);
+
+    cout <<"Time of Execution: " <<duration.count() <<" us"<< endl;
     return 0;
 }
