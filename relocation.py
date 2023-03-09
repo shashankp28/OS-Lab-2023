@@ -6,6 +6,8 @@ import random
 import math
 
 valid = 0
+
+
 def convert(size):
     length = len(size)
     lastchar = size[length-1]
@@ -103,16 +105,19 @@ for i in range(0, options.num):
     vaddr = int(asize * random.random())
     if options.solve == False:
         pass
-        print('  VA %2d: 0x%08x (decimal: %4d) --> PA or segmentation violation?' % (i, vaddr, vaddr))
+        print('  VA %2d: 0x%08x (decimal: %4d) --> PA or segmentation violation?' %
+              (i, vaddr, vaddr))
     else:
         paddr = 0
         if (vaddr >= limit):
             pass
-            print('  VA %2d: 0x%08x (decimal: %4d) --> SEGMENTATION VIOLATION' % (i, vaddr, vaddr))
+            print('  VA %2d: 0x%08x (decimal: %4d) --> SEGMENTATION VIOLATION' %
+                  (i, vaddr, vaddr))
         else:
             paddr = vaddr + base
             valid += 1
-            print('  VA %2d: 0x%08x (decimal: %4d) --> VALID: 0x%08x (decimal: %4d)' % (i, vaddr, vaddr, paddr, paddr))
+            print('  VA %2d: 0x%08x (decimal: %4d) --> VALID: 0x%08x (decimal: %4d)' %
+                  (i, vaddr, vaddr, paddr, paddr))
 
 
 print('')
@@ -125,4 +130,4 @@ if options.solve == False:
     pass
 
 
-print(valid)
+print("Valid Requests: ", valid)
