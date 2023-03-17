@@ -4,9 +4,9 @@
 
 using namespace std;
 
-void read_file(vector<int> &requests)
+void read_file(vector<int> &requests, string input_file)
 {
-    ifstream infile("req1.dat");
+    ifstream infile(input_file);
     int num;
     while (infile >> num)
     {
@@ -41,11 +41,18 @@ int get_opt_request(vector<int> &requests, unordered_set<int> &memory_frames)
         return max_index;
 }
 
-int main()
+int main(int argc, char **argv)
 {
-    int addressable_size = 60;
-    int memory_size = 20;
-    int disk_size = 60;
+    if (argc != 5)
+    {
+        cout << "Usage: ./FIFO <addressable_size> <memory_size> <disk_size> <input_file>" << endl;
+        return 0;
+    }
+
+    int addressable_size = atoi(argv[1]);
+    int memory_size = atoi(argv[2]);
+    int disk_size = atoi(argv[3]);
+    string input_file(argv[4]);
     int pageFaults = 0;
 
     vector<int> requests;

@@ -4,9 +4,9 @@
 
 using namespace std;
 
-void read_file(vector<int> &requests)
+void read_file(vector<int> &requests, string input_file)
 {
-    ifstream infile("req1.dat");
+    ifstream infile(input_file);
     int num;
     while (infile >> num)
     {
@@ -14,7 +14,6 @@ void read_file(vector<int> &requests)
     }
     infile.close();
 }
-
 int get_lru_request(unordered_map<int, int> &memory_frames){
     int min_time = INT_MAX, min_req=0;
     for(auto kv : memory_frames){
@@ -26,12 +25,18 @@ int get_lru_request(unordered_map<int, int> &memory_frames){
     return min_req;
 }
 
-
-int main()
+int main(int argc, char **argv)
 {
-    int addressable_size = 60;
-    int memory_size = 20;
-    int disk_size = 60;
+    if (argc != 5)
+    {
+        cout << "Usage: ./FIFO <addressable_size> <memory_size> <disk_size> <input_file>" << endl;
+        return 0;
+    }
+
+    int addressable_size = atoi(argv[1]);
+    int memory_size = atoi(argv[2]);
+    int disk_size = atoi(argv[3]);
+    string input_file(argv[4]);
     int pageFaults = 0;
 
     vector<int> requests;
