@@ -40,6 +40,11 @@ int main(int argc, char* argv[]) {
     int num_blocks = atoi(argv[3]);
     string page_requests = argv[4];
     
+    if (num_blocks < num_pages) {
+    cerr << "Error: Swap size is less than the number of blocks required." << endl;
+    exit(1);
+    }
+    
     // Initialize data structures
     unordered_map<int, int> page_table;
     vector<int> frames(num_frames, -1);
@@ -80,10 +85,12 @@ int main(int argc, char* argv[]) {
     //     cout << "Page " << it->first << " is in frame " << it->second << endl;
     // }
 
-    cout << "--------------------------------------------------------" << endl;
-    cout << "RANDOM POLICY" << endl;
-    cout << "Number of hits: " << hits << endl;
-    cout << "Number of page faults: " << page_faults << endl;
+    // cout << "--------------------------------------------------------" << endl;
+    // cout << "RANDOM POLICY" << endl;
+    // cout << "Number of hits: " << hits << endl;
+    // cout << "Number of page faults: " << page_faults << endl;
+
+    cout<<page_faults<<endl;
     
     return 0;
 }
