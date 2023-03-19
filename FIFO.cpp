@@ -23,15 +23,21 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    cout << "--------------------------------------------" << endl;
+    cout << "FIFO" << endl;
+
     int addressable_size = atoi(argv[1]);
     int memory_size = atoi(argv[2]);
-    int disk_size = atoi(argv[3]);
+    int swap_size = atoi(argv[3]);
     string input_file(argv[4]);
+
+    unordered_set<int> swap_space;
     int pageFaults = 0;
 
     vector<int> requests;
     read_file(requests, input_file);
-
+    unordered_set<int> unique_requests(requests.begin(), requests.end());
+    cout << "Unique Requests: " << unique_requests.size() << endl;
     queue<int> memory;
     unordered_set<int> memory_frames;
 
@@ -46,13 +52,21 @@ int main(int argc, char **argv)
             int swap = memory.front();
             memory_frames.erase(swap);
             memory.pop();
+            swap_space.insert(swap);
+            if (swap_space.size() > swap_size)
+            {
+                cout << "Error: Swap space is full\n";
+                return 1;
+            }
         }
+        if (swap_space.find(i) != swap_space.end())
+            swap_space.erase(i);
         memory_frames.insert(i);
         memory.push(i);
     }
 
-    cout << "Page Faults " << pageFaults << "\n";
-    cout << "Total " << requests.size() << "\n";
+    cout << "Page Faults: " << pageFaults << "\n";
+    cout << "Total: " << requests.size() << "\n";
 
     return 0;
 }

@@ -23,21 +23,28 @@ int main(int argc, char **argv)
         return 0;
     }
 
+    cout << "--------------------------------------------" << endl;
+    cout << "Random" << endl;
+
     int addressable_size = atoi(argv[1]);
     int memory_size = atoi(argv[2]);
-    int disk_size = atoi(argv[3]);
+    int swap_size = atoi(argv[3]);
     string input_file(argv[4]);
+    unordered_set<int> swap_space;
+
     int pageFaults = 0;
     srand(time(NULL));
 
     vector<int> requests;
-    read_file(requests);
+    read_file(requests, input_file);
+    unordered_set<int> unique_requests(requests.begin(), requests.end());
+    cout << "Unique Requests: " << unique_requests.size() << endl;
 
     unordered_set<int> memory_frames;
 
-    int ind = 0;
     for (auto i : requests)
     {
+
         if (memory_frames.find(i) != memory_frames.end())
             continue;
 
@@ -48,12 +55,20 @@ int main(int argc, char **argv)
             auto itr = memory_frames.begin();
             advance(itr, index);
             memory_frames.erase(itr);
+            swap_space.insert(*itr);
+            if (swap_space.size() > swap_size)
+            {
+                cout << "Error: Swap space is full\n";
+                return 1;
+            }
         }
+        if (swap_space.find(i) != swap_space.end())
+            swap_space.erase(i);
         memory_frames.insert(i);
     }
 
-    cout << "Page Faults " << pageFaults << "\n";
-    cout << "Total " << requests.size() << "\n";
+    cout << "Page Faults: " << pageFaults << "\n";
+    cout << "Total: " << requests.size() << "\n";
 
     return 0;
 }
