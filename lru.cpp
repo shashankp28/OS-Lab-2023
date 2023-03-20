@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
     int num_blocks = atoi(argv[3]);
     string page_requests = argv[4];
     
-    if (num_blocks < num_pages) {
+    if (num_blocks <= num_pages) {
         cerr << "Error: Swap size is less than the number of blocks required." << endl;
         exit(1);
     }
@@ -101,7 +101,8 @@ int main(int argc, char* argv[]) {
     // cout << "LRU POLICY USING QUEUE" << endl;
     // cout << "Number of hits: " << hits << endl;
     // cout << "Number of page faults: " << page_faults << endl;
-    cout << page_faults << endl;
-
+    cout << "End";
+    //cout << page_faults << endl;
+    
     return 0;
 }

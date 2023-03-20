@@ -6,8 +6,8 @@ fifo:
 lru:
 	@g++ lru.cpp -o lru
 test:
-	@./random 60 20 60 ./Test_files/req1.dat
-	@./fifo 60 20 60 ./Test_files/req1.dat
-	@./lru 60 20 60 ./Test_files/req1.dat
+	@./random 40 40 40 ./Test_files/req1.dat
+	@./fifo 40 40 40 ./Test_files/req1.dat
+	@./lru 40 40 40 ./Test_files/req1.dat
 clean:
 	@rm -f random fifo lru
