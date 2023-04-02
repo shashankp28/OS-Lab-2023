@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+#include <string>
 
 using namespace std;
 
@@ -35,3 +37,25 @@ public:
         return;
     }
 };
+
+
+int main(){
+
+    std::ifstream file("input1.txt");
+    std::string line;
+
+    if (file.is_open())
+    {
+        while (getline(file, line))
+        {
+            std::cout << line << std::endl;
+        }
+        file.close();
+    }
+    else
+    {
+        std::cerr << "Unable to open file" << std::endl;
+    }
+
+    return 0;
+}
