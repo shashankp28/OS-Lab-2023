@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cmath>
+#include <sstream>
 
 using namespace std;
 
@@ -41,20 +43,49 @@ public:
 
 int main(){
 
-    std::ifstream file("input1.txt");
-    std::string line;
+    ifstream file("input1.txt");
+    string line;
+    int test_cases;
 
     if (file.is_open())
     {
-        while (getline(file, line))
-        {
-            std::cout << line << std::endl;
+        getline(file, line);
+        test_cases = stoi(line);
+        getline(file, line);
+
+        for (int t = 0; t< test_cases; t++){
+            getline(file, line);
+            int U, L;
+            std::stringstream ss(line);
+            ss >> U >> L;
+            getline(file, line);
+
+            U = pow(2, U);
+            L = pow(2, L);
+
+            BuddyMemoryManager *root = new BuddyMemoryManager("Free Block", U);
+
+            getline(file, line);
+            while (line != ""){
+                
+                if (file.fail() || file.eof()) break;
+
+                string id;
+                int size;
+
+                std::stringstream ss(line);
+                ss >> id >> size;
+
+                cout << t <<" "<< U <<" "<< L<<" "<< id <<" "<< size << endl;
+                getline(file, line);
+            }
+
         }
         file.close();
     }
     else
     {
-        std::cerr << "Unable to open file" << std::endl;
+        cerr << "Unable to open file" << endl;
     }
 
     return 0;
