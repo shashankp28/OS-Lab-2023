@@ -34,6 +34,10 @@ public:
         return;
     }
 
+    void merge(){
+        return;
+    }
+
     void print()
     {
         return;
