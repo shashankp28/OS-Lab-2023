@@ -18,6 +18,7 @@ private:
     BuddyMemoryManager *right;
     int allotted_size;
     static int time;
+    unordered_map<char, BuddyMemoryManager *> process_to_node;
 
 public:
     BuddyMemoryManager(string node_n, int node_s)
@@ -87,22 +88,56 @@ public:
             best_fit->node_name = pid;
             best_fit->allotted_size = size;
             best_fit->last_freed = 0;
+            process_to_node[pid] = best_fit;
         }
         return 0;
     }
 
-    void dealloc(string name)
+    void dealloc(char name)
     {
+        BuddyMemoryManager *node = process_to_node[name];
+        node->node_name = "Free Block";
+        node->allotted_size = 0;
+        node->last_freed = time++;
+        process_to_node.erase(name);
+        this->merge();
         return;
     }
 
     void merge()
     {
+        if (this->left && this->right)
+        {
+            this->left->merge();
+            this->right->merge();
+        }
+        else if (this->left->node_name == "Free Block" && this->right->node_name == "Free Block")
+        {
+            this->left = NULL;
+            this->right = NULL;
+            this->node_name = "Free Block";
+        }
         return;
     }
 
     void print()
     {
+        if (this->left && this->right)
+        {
+            this->left->print();
+            this->right->print();
+        }
+        else
+        {
+            if (node_name == "Free Block")
+            {
+                cout << this->node_name << ": " << this->node_size << endl;
+            }
+            else
+            {
+                cout << this->node_name << ": " << this->allotted_size << endl;
+            }
+        }
         return;
     }
 };
@@ -128,8 +163,8 @@ int main()
             ss >> U >> L;
             getline(file, line);
 
-            U = pow(2, U);
-            L = pow(2, L);
+            U = (int)pow(2, U);
+            L = (int)pow(2, L);
 
             BuddyMemoryManager *root = new BuddyMemoryManager("Free Block", U);
 
