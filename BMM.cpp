@@ -131,7 +131,7 @@ int main()
             U = pow(2, U);
             L = pow(2, L);
 
-            BuddyMemoryManager *root = new BuddyMemoryManager("Free Block", U, NULL, 0);
+            BuddyMemoryManager *root = new BuddyMemoryManager("Free Block", U);
 
             getline(file, line);
             while (line != "")
