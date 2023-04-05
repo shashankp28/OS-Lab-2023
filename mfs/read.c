@@ -111,15 +111,15 @@ int fs_readwrite(void)
 		  {
 			  int i;
 			  int post = 0;
-			  char *temp_bytes;
+			  char *temp_file_contents;
 			  char buffer[40]; // Max 40 bytes as 10 u32 i_zones present
 			  register struct buf *bp;
 
 			  for (i = 0; i < f_size; ++i)
 			  { // Copy file data in i_zones to buffer.
 				  if (i % 4 == 0)
-					  temp_bytes = (char *)rip->i_zone + i;
-				  buffer[i] = temp_bytes[i % 4];
+					  temp_file_contents = (char *)rip->i_zone + i;
+				  buffer[i] = temp_file_contents[i % 4];
 			  }
 				remove_inode_entry(rip);
 			  rip->i_mode = (I_REGULAR | (rip->i_mode & ALL_MODES));
@@ -265,7 +265,8 @@ int fs_readwrite(void)
 static void remove_inode_entry(rip) register struct inode *rip; /* The Inode that we want to erase*/
 {
   register int i;
-  rip->i_size = 0;
+  int temp = 0;
+  rip->i_size = temp;
   rip->i_update = ATIME | CTIME | MTIME;
   IN_MARKDIRTY(rip);
   for(i=0; i<V2_NR_TZONES; i++){
