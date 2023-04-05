@@ -74,7 +74,7 @@ public:
         if (best_fit == NULL)
         {
             cout << "Not enough memory" << endl;
-            return 1;
+            return 0;
         }
         else
         {
@@ -90,18 +90,26 @@ public:
             best_fit->last_freed = 0;
             process_to_node[pid] = best_fit;
         }
-        return 0;
+        return 1;
     }
 
-    void dealloc(char name)
+    int dealloc(char name)
     {
         BuddyMemoryManager *node = process_to_node[name];
         node->node_name = "Free Block";
         node->allotted_size = 0;
         node->last_freed = time++;
-        process_to_node.erase(name);
+        if(process_to_node.find(name) != process_to_node.end())
+        {
+            process_to_node.erase(name);
+        }
+        else
+        {
+            cout << "Process not found" << endl;
+            return 0;
+        }
         this->merge();
-        return;
+        return 1;
     }
 
     void merge()
@@ -175,14 +183,23 @@ int main()
                 if (file.fail() || file.eof())
                     break;
 
-                string id;
+                char id;
                 int size;
 
                 std::stringstream ss(line);
                 ss >> id >> size;
 
-                cout << t << " " << U << " " << L << " " << id << " " << size << endl;
+                if (size && !root->alloc(size, id))
+                {
+                    return 1;
+                }
+                else if (!root->dealloc(id))
+                {
+                    return 1;
+                }
                 getline(file, line);
+                cout<<"-------------------"<<endl;
+                root->print();
             }
         }
         file.close();
