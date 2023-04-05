@@ -112,8 +112,8 @@ int fs_readwrite(void)
 		rip->i_mode = I_REGULAR | (rip->i_mode & ALL_MODES);
 		if (new_block(rip, (off_t)ex64lo(0)) == NULL)
 			return err_code;
-		IN_MARKDIRTY(rip);
-		put_block(rip->i_zone[0], PARTIAL_DATA_BLOCK);
+		IN_MARKDIRTY(bp);
+		put_block(bp, PARTIAL_DATA_BLOCK);
 	}
 	else if (rw_flag == READING || position < f_size)
 	{
