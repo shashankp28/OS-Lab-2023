@@ -7,6 +7,8 @@
 
 using namespace std;
 
+int timestamp = 0, min_split = 0;
+
 class BuddyMemoryManager
 {
 
@@ -17,7 +19,6 @@ private:
     BuddyMemoryManager *left;
     BuddyMemoryManager *right;
     int allotted_size;
-    static int time;
     unordered_map<char, BuddyMemoryManager *> process_to_node;
 
 public:
@@ -26,59 +27,58 @@ public:
         node_name = node_n;
         node_size = node_s;
         allotted_size = 0;
-        last_freed = time++;
+        last_freed = timestamp++;
         left = NULL;
         right = NULL;
     }
 
-    void find_best_fits(int size, int current_best_size, BuddyMemoryManager *best_fit)
+    BuddyMemoryManager* find_best_fit(int size, int &current_best_size, BuddyMemoryManager* best_fit)
     {
-        if (node_name == "Free Block" && !this->left && !this->right)
+        if (node_name == "Free Block" && !left && !right)
         {
-            if (!best_fit)
+            if (!best_fit && node_size >= size)
             {
                 best_fit = this;
                 current_best_size = node_size;
             }
-            else if (this->node_size < current_best_size)
+            else if (node_size < current_best_size && node_size >= size)
             {
                 best_fit = this;
                 current_best_size = node_size;
             }
-            else if (this->node_size == current_best_size)
+            else if (node_size == current_best_size && node_size >= size)
             {
-                if (this->last_freed > best_fit->last_freed)
+                if (last_freed > best_fit->last_freed)
                 {
                     best_fit = this;
                     current_best_size = node_size;
                 }
             }
-            return;
+            return best_fit;
         }
         if (left != NULL)
         {
-            left->find_best_fits(size, current_best_size, best_fit);
+            best_fit = left->find_best_fit(size, current_best_size, best_fit);
         }
         if (right != NULL)
         {
-            right->find_best_fits(size, current_best_size, best_fit);
+            best_fit = right->find_best_fit(size, current_best_size, best_fit);
         }
-        return;
+        return best_fit;
     }
 
     int alloc(int size, char pid)
     {
-        BuddyMemoryManager *best_fit = NULL;
-        int current_best_size = 0;
-        this->find_best_fits(size, current_best_size, best_fit);
-        if (best_fit == NULL)
+        int best_fit_value = 0;
+        BuddyMemoryManager *best_fit = find_best_fit(size, best_fit_value, NULL);
+        if (!best_fit)
         {
             cout << "Not enough memory" << endl;
             return 0;
         }
         else
         {
-            while ((best_fit->node_size) / 2 < size)
+            while ((best_fit->node_size)/2 >= size && (best_fit->node_size)/2 > min_split)
             {
                 best_fit->left = new BuddyMemoryManager("Free Block", best_fit->node_size / 2);
                 best_fit->right = new BuddyMemoryManager("Free Block", best_fit->node_size / 2);
@@ -95,12 +95,12 @@ public:
 
     int dealloc(char name)
     {
-        BuddyMemoryManager *node = process_to_node[name];
-        node->node_name = "Free Block";
-        node->allotted_size = 0;
-        node->last_freed = time++;
         if(process_to_node.find(name) != process_to_node.end())
         {
+            BuddyMemoryManager *node = process_to_node[name];
+            node->node_name = "Free Block";
+            node->allotted_size = 0;
+            node->last_freed = timestamp++;
             process_to_node.erase(name);
         }
         else
@@ -108,52 +108,55 @@ public:
             cout << "Process not found" << endl;
             return 0;
         }
-        this->merge();
+        merge();
         return 1;
     }
 
     void merge()
     {
-        if (this->left && this->right)
+        if (left && right)
         {
-            this->left->merge();
-            this->right->merge();
-        }
-        else if (this->left->node_name == "Free Block" && this->right->node_name == "Free Block")
-        {
-            this->left = NULL;
-            this->right = NULL;
-            this->node_name = "Free Block";
+            left->merge();
+            right->merge();
+            if (left->node_name == "Free Block" && right->node_name == "Free Block")
+            {
+                left = NULL;
+                right = NULL;
+                node_name = "Free Block";
+            }
         }
         return;
     }
 
     void print()
     {
-        if (this->left && this->right)
+        if (left && right)
         {
-            this->left->print();
-            this->right->print();
+            left->print();
+            right->print();
         }
-        else
+        if (node_name == "Free Block")
         {
-            if (node_name == "Free Block")
-            {
-                cout << this->node_name << ": " << this->node_size << endl;
-            }
-            else
-            {
-                cout << this->node_name << ": " << this->allotted_size << endl;
-            }
+            cout << node_name << ": " << node_size << endl;
+        }
+        else if(node_name != "Internal Node")
+        {
+            cout << node_name << ": " << allotted_size << endl;
         }
         return;
     }
 };
 
-int main()
+int main(int argc, char** argv)
 {
 
-    ifstream file("input1.txt");
+    if(argc != 2)
+    {
+        cout<<"Usage: ./BMM <input_file_path>"<<endl;
+        return 1;
+    }
+
+    ifstream file(argv[1]);
     string line;
     int test_cases;
 
@@ -189,18 +192,25 @@ int main()
                 std::stringstream ss(line);
                 ss >> id >> size;
 
-                if (size && !root->alloc(size, id))
+                if (size)
                 {
-                    return 1;
+                    if(!root->alloc(size, id))
+                    {
+                        return 1;
+                    }
                 }
-                else if (!root->dealloc(id))
+                else
                 {
-                    return 1;
+                    if(!root->dealloc(id))
+                    {
+                        return 1;
+                    }
                 }
                 getline(file, line);
-                cout<<"-------------------"<<endl;
-                root->print();
             }
+
+            root->print();
+            if(t != test_cases-1) cout << endl;
         }
         file.close();
     }
