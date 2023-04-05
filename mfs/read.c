@@ -30,7 +30,7 @@ int fs_readwrite(void)
 	/*LAB-10*/
 	int immediate = 0;
 	/*---------------*/
-	
+
 	int r, rw_flag, block_spec;
 	int regular;
 	cp_grant_id_t gid;
@@ -116,44 +116,83 @@ int fs_readwrite(void)
 	{
 		if (rw_flag == WRITING && position + nrbytes > 32)
 		{
-			// Write to immediate file
+			int i;
+			int post = 0;
+			char *temp_bytes;
 			char buffer[40]; // Max 40 bytes as 10 u32 i_zones present
-			int i, j = 0;
-			for (i = 0; i < f_size; i += 4)
-			{
-				uint32_t word = rip->i_zone[j++];
-				buffer[i] = word & 0xff;
-				buffer[i + 1] = (word >> 8) & 0xff;
-				buffer[i + 2] = (word >> 16) & 0xff;
-				buffer[i + 3] = (word >> 24) & 0xff;
+			register struct buf *bp;
+
+			for (i = 0; i < f_size; ++i)
+			{ // Copy file data in i_zones to buffer.
+				if (i % 4 == 0)
+					temp_bytes = (char *)(void *)rip->i_zone + i;
+				buffer[i] = temp_bytes[i % 4];
 			}
 			remove_inode_entry(rip);
 			rip->i_mode = (I_REGULAR | (rip->i_mode & ALL_MODES));
 			mode_word = rip->i_mode & I_TYPE;
-			struct buf *bp = new_block(rip, (off_t)ex64lo(0));
-			if (bp == NULL)
-			{
+			if ((bp = new_block(rip, (off_t)ex64lo(post))) == NULL)
 				return (err_code);
+			for (i = 0; i < f_size; ++i)
+			{
+				((char *)(void *)bp->data)[i] = buffer[i];
 			}
-			memcpy(bp->data, buffer, f_size);
 			MARKDIRTY(bp);
 			put_block(bp, PARTIAL_DATA_BLOCK);
 		}
 		else if (rw_flag == READING && position < f_size)
 		{
-			// Read from immediate file
+			printf("Minix3: Reading from Immediate File.\n");
+			r = sys_safecopyto(VFS_PROC_NR, gid, (vir_bytes)cum_io, (vir_bytes)(void *)rip->i_zone, (size_t)f_size);
+
+			int i;
+			int post = 0;
+			char *temp_bytes;
+			char buffer[40]; // Max 40 bytes as 10 u32 i_zones present
+			for (i = 0; i < f_size; ++i)
+			{ // Copy file data in i_zones to buffer.
+				if (i % 4 == 0)
+					temp_bytes = (char *)(void *)rip->i_zone + i;
+				buffer[i] = temp_bytes[i % 4];
+			}
+
+			printf("Minix3: File Contents of Immediate File:\n");
+			for (i = 0; i < f_size; ++i)
+			{
+				printf("%c", buffer[i]);
+			}
+			printf("Minix3: EOF - Immediate File\n");
+
+			if (r == OK)
+			{
+				nrbytes = 0;
+				cum_io += f_size;
+				position += f_size;
+			}
+		}
+		else if (rw_flag == WRITING || position + nrbytes <= 32)
+		{
+			immediate = 1;
+		}
+		else
+		{
+			immediate = 0;
+		}
+	}
+
+	if (immediate == 1)
+	{
+		if (rw_flag == READING)
+		{
 			printf("Minix3: Reading from Immediate File.\n");
 			r = sys_safecopyto(VFS_PROC_NR, gid, (vir_bytes)cum_io, (vir_bytes)rip->i_zone, (size_t)f_size);
 
+			int i;
 			char buffer[40]; // Max 40 bytes as 10 u32 i_zones present
-			int i, j = 0;
 			for (i = 0; i < f_size; i += 4)
-			{
-				uint32_t word = rip->i_zone[j++];
-				buffer[i] = word & 0xff;
-				buffer[i + 1] = (word >> 8) & 0xff;
-				buffer[i + 2] = (word >> 16) & 0xff;
-				buffer[i + 3] = (word >> 24) & 0xff;
+			{ // Copy file data in i_zones to buffer.
+				uint32_t temp_u32 = *((uint32_t *)(rip->i_zone + i));
+				memcpy(buffer + i, &temp_u32, sizeof(uint32_t));
 			}
 
 			printf("Minix3: File Contents of Immediate File:\n");
@@ -172,32 +211,17 @@ int fs_readwrite(void)
 		}
 		else
 		{
-			// Check if immediate file is required
-			immediate = (rw_flag == WRITING || position + nrbytes <= 32);
-		}
-	}
-
-	if (immediate == 1)
-	{
-		if (rw_flag == READING)
-		{
-			printf("Minix3: Reading from Immediate File.\n");
-			char buffer[40];
-			int bytes_copied = copy_file_data_to_buffer(rip->i_zone, buffer, f_size);
-			print_file_contents(buffer, bytes_copied);
-			position += bytes_copied;
-			cum_io += bytes_copied;
-			nrbytes = 0;
-		}
-		else if (rw_flag == WRITING && position + nrbytes <= 32)
-		{
 			printf("Minix3: Writing to Immediate File.\n");
-			vir_bytes zone = (vir_bytes)rip->i_zone;
-			int bytes_written = copy_buffer_to_file_data(buffer, zone + position, nrbytes);
-			position += bytes_written;
-			cum_io += bytes_written;
-			nrbytes = 0;
+			vir_bytes zone;
+			zone = (vir_bytes)rip->i_zone;
+			r = sys_safecopyfrom(VFS_PROC_NR, gid, (vir_bytes)cum_io, zone + position, (size_t)nrbytes);
 			IN_MARKDIRTY(rip);
+			if (r == OK)
+			{
+				cum_io += nrbytes;
+				position += (off_t)nrbytes;
+				nrbytes = 0;
+			}
 		}
 	}
 	/*----------------------------------------------------*/
