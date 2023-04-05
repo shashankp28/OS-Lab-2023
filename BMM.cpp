@@ -183,9 +183,6 @@ int main(int argc, char** argv)
             while (line != "")
             {
 
-                if (file.fail() || file.eof())
-                    break;
-
                 char id;
                 int size;
 
@@ -205,6 +202,10 @@ int main(int argc, char** argv)
                     {
                         return 1;
                     }
+                }
+                if (file.fail() || file.eof())
+                {
+                    break;
                 }
                 getline(file, line);
             }

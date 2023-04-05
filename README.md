@@ -1,5 +1,8 @@
 # Binary Buddy Memory Management
 
+**Must have g++ compiler and make**
+
+
 To run the application follow the given steps:
 
 0. Run the following to remove junk files:
