@@ -26,6 +26,11 @@ static void remove_inode_entry(struct inode *rip);
  *===========================================================================*/
 int fs_readwrite(void)
 {
+	/*---------------*/
+	/*LAB-10*/
+	int immediate = 0;
+	/*---------------*/
+	
 	int r, rw_flag, block_spec;
 	int regular;
 	cp_grant_id_t gid;
