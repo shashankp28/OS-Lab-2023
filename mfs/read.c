@@ -117,7 +117,8 @@ int fs_readwrite(void)
 		if (rw_flag == WRITING && position + nrbytes > 32)
 		{
 			int i, post = 0;
-			char *temp_bytes, buffer[40]; // Max 40 bytes as 10 u32 i_zones present
+			char *temp_bytes;
+			char buffer[40]; // Max 40 bytes as 10 u32 i_zones present
 			register struct buf *bp;
 
 			for (i = 0; i < f_size; ++i)
