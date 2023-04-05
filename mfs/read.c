@@ -39,11 +39,6 @@ int fs_readwrite(void)
   int completed;
   struct inode *rip;
   size_t nrbytes;
-
-  /*---------------*/
-  /*LAB-10*/
-  int immediate = 0;
-  /*---------------*/
   
   r = OK;
   
@@ -138,6 +133,7 @@ int fs_readwrite(void)
 		}
 		else
 		{
+			// Write at inode immediate zone
 			r = sys_safecopyfrom(VFS_PROC_NR, gid, (vir_bytes)cum_io, (vir_bytes)rip->i_zone + position, (size_t)nrbytes);
 			if (r == OK)
 			{
