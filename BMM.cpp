@@ -7,23 +7,25 @@
 
 using namespace std;
 
+class BuddyMemoryManager;
+
 // Global variables
-int timestamp = 0, min_split = 0; // timestamp keeps track of when a process was last freed, min_split is the smallest block size that can be split
+int min_split = 0;                                         // in_split is the smallest block size that can be split
+unordered_map<char, BuddyMemoryManager *> process_to_node; // a map from process IDs to the node that the process is stored in
+int timestamp;                                             // timestamp keeps track of when a process was last freed
 
 // BuddyMemoryManager class declaration
 class BuddyMemoryManager
 {
 
-private:
-    string node_name;                                          // the name of the node: "Free Block", "Internal Node", or a process ID
-    int node_size;                                             // the size of the node
-    int last_freed;                                            // the timestamp of when a process was last freed from this node
-    BuddyMemoryManager *left;                                  // the left child of this node in the binary tree
-    BuddyMemoryManager *right;                                 // the right child of this node in the binary tree
-    int allotted_size;                                         // the size of the node that has been allotted to a process (if the node is a process node)
-    unordered_map<char, BuddyMemoryManager *> process_to_node; // a map from process IDs to the node that the process is stored in
-
 public:
+    string node_name;          // the name of the node: "Free Block", "Internal Node", or a process ID
+    int node_size;             // the size of the node
+    int last_freed;            // the timestamp of when a process was last freed from this node
+    BuddyMemoryManager *left;  // the left child of this node in the binary tree
+    BuddyMemoryManager *right; // the right child of this node in the binary tree
+    int allotted_size;         // the size of the node that has been allotted to a process (if the node is a process node)
+
     BuddyMemoryManager(string node_n, int node_s) // constructor
     {
         node_name = node_n;
@@ -37,22 +39,22 @@ public:
     BuddyMemoryManager *find_best_fit(int size, int &current_best_size, BuddyMemoryManager *best_fit) // helper function to find the best-fit node to allocate a process
     {
         // if this node is a free block and has no children
-        if (node_name == "Free Block" && !left && !right) 
+        if (node_name == "Free Block" && !left && !right)
         {
             // if there is no best-fit node yet and this node is large enough to fit the process
-            if (!best_fit && node_size >= size) 
+            if (!best_fit && node_size >= size)
             {
                 best_fit = this;
                 current_best_size = node_size;
             }
 
             // if this node is smaller than the current best-fit node but still large enough to fit the process
-            else if (node_size < current_best_size && node_size >= size)             
+            else if (node_size < current_best_size && node_size >= size)
             {
                 best_fit = this;
                 current_best_size = node_size;
             }
-            
+
             else if (node_size == current_best_size && node_size >= size) // if this node is the same size as the current best-fit node and still large enough to fit the process
             {
                 if (last_freed > best_fit->last_freed) // choose the node that was last freed
@@ -168,7 +170,7 @@ public:
         {
             cout << node_name << ": " << node_size << endl;
         }
-        else if(node_name != "Internal Node")
+        else if (node_name != "Internal Node")
         {
             cout << node_name << ": " << allotted_size << endl;
         }
@@ -176,12 +178,12 @@ public:
     }
 };
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
 
-    if(argc != 2)
+    if (argc != 2)
     {
-        cout<<"Usage: ./BMM <input_file_path>"<<endl;
+        cout << "Usage: ./BMM <input_file_path>" << endl;
         return 1;
     }
 
@@ -220,14 +222,14 @@ int main(int argc, char** argv)
 
                 if (size)
                 {
-                    if(!root->alloc(size, id))
+                    if (!root->alloc(size, id))
                     {
                         return 1;
                     }
                 }
                 else
                 {
-                    if(!root->dealloc(id))
+                    if (!root->dealloc(id))
                     {
                         return 1;
                     }
@@ -240,7 +242,8 @@ int main(int argc, char** argv)
             }
 
             root->print();
-            if(t != test_cases-1) cout << endl;
+            if (t != test_cases - 1)
+                cout << endl;
         }
         file.close();
     }
