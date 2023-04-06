@@ -21,3 +21,19 @@ bash runme <input_file_path> <output_file_path>
 ```
 
 **Note:** Sample inputs and outputs are given their respective folders
+
+## OUTPUT1.txt
+![Peer Folder](./screenshots/1.jpg) <br>
+
+## OUTPUT2.txt
+![Peer Folder](./screenshots/2.jpg) <br>
+
+## OUTPUT3.txt
+![Peer Folder](./screenshots/3.jpg) <br>
+
+## OUTPUT4.txt
+![Peer Folder](./screenshots/4.jpg) <br>
+
+## OUTPUT5.txt
+![Peer Folder](./screenshots/5.jpg) <br>
+
