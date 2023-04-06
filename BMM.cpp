@@ -92,8 +92,8 @@ public:
             while ((best_fit->node_size) / 2 >= size && (best_fit->node_size) / 2 > min_split)
             {
                 // Create left and right child nodes of the current block
-                best_fit->left = new BuddyMemoryManager("Free Block", best_fit->node_size / 2);
                 best_fit->right = new BuddyMemoryManager("Free Block", best_fit->node_size / 2);
+                best_fit->left = new BuddyMemoryManager("Free Block", best_fit->node_size / 2);
                 best_fit->node_name = "Internal Node";
                 best_fit = best_fit->left; // Set the current block to be the left child
             }
@@ -151,6 +151,7 @@ public:
                 left = NULL;
                 right = NULL;
                 node_name = "Free Block";
+                last_freed = timestamp++;
             }
         }
         return;
